@@ -4,23 +4,19 @@ data "azurerm_client_config" "me" {}
 
 
 locals {
- 
-  vnet_cidr      = "10.0.0.0/8"
-  vm_cidr        = "10.0.0.0/24"
-  bastion_cidr   = "10.1.0.0/24"
- 
+
+  vnet_cidr    = "10.0.0.0/8"
+  vm_cidr      = "10.0.0.0/24"
+  bastion_cidr = "10.1.0.0/24"
+
   resource_suffix = "sde-forge"
 
   tenant_id = data.azurerm_client_config.me.tenant_id
 
   resource_group = var.resource_group_name
-  location = var.location
+  location       = var.location
 
-  tags = merge( var.tags, { "Project" = "sde-forge" } )
-}
-
-data "azurerm_resource_group" "rg" {
-  name = var.resource_group_name
+  tags = merge(var.tags, { "Project" = "sde-forge" })
 }
 
 resource "azurerm_virtual_network" "vnet" {

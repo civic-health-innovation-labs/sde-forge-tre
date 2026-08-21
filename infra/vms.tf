@@ -72,13 +72,13 @@ resource "azurerm_linux_virtual_machine" "host" {
   admin_username = "azureadmin"
   admin_ssh_key {
     public_key = tls_private_key.admin_key.public_key_openssh
-    username = "azureadmin"
+    username   = "azureadmin"
   }
 
   encryption_at_host_enabled = true
   vtpm_enabled               = true
 
-  provision_vm_agent        = true
+  provision_vm_agent = true
 
   secure_boot_enabled = true
 
