@@ -7,9 +7,6 @@ module "names" {
 }
 
 data "azurerm_client_config" "me" {}
-data "azuread_group" "my_group" {
-  display_name = module.names.group_name
-}
 
 module "azure_names" {
   source = "Azure/naming/azurerm"
@@ -64,21 +61,11 @@ resource "azurerm_role_assignment" "des_kv_access" {
   principal_id = azurerm_disk_encryption_set.vm-des.identity[0].principal_id
 }
 
-resource "azurerm_role_assignment" "group_kv_admin" {
-  scope = azurerm_key_vault.kv.id
-  role_definition_name = "Key Vault Administrator"
-  principal_id = data.azuread_group.my_group.object_id
-}
-
 resource "azurerm_key_vault_key" "vm-encryption" {
   name         = "des-${local.resource_suffix}-vms"
   key_vault_id = azurerm_key_vault.kv.id
   key_type     = "RSA"
   key_size     = 2048
-
-  depends_on = [
-    azurerm_role_assignment.group_kv_admin
-  ]
 
   key_opts = [
     "decrypt",

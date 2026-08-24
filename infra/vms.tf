@@ -34,32 +34,32 @@ resource "azurerm_key_vault_secret" "vm_private_key" {
 }
 
 
-module "vm_storage_account_name" {
-  source = "../modules/storage-account-name"
-  prefix = "sta-${local.resource_suffix}"
-}
+# module "vm_storage_account_name" {
+#   source = "../modules/storage-account-name"
+#   prefix = "sta-${local.resource_suffix}"
+# }
 
-resource "azurerm_storage_account" "vm" {
-  name                = module.vm_storage_account_name.storage_account_name
-  location            = local.location
-  resource_group_name = local.resource_group
+# resource "azurerm_storage_account" "vm" {
+#   name                = module.vm_storage_account_name.storage_account_name
+#   location            = local.location
+#   resource_group_name = local.resource_group
 
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
+#   account_tier             = "Standard"
+#   account_replication_type = "LRS"
 
-  network_rules {
-    default_action             = "Deny"
-    virtual_network_subnet_ids = [azurerm_subnet.vms.id]
-  }
+#   network_rules {
+#     default_action             = "Deny"
+#     virtual_network_subnet_ids = [azurerm_subnet.vms.id]
+#   }
 
-  tags = local.tags
-}
+#   tags = local.tags
+# }
 
-resource "azurerm_storage_share" "vm-common" {
-  name               = "ss-${local.resource_suffix}-share"
-  quota              = 5
-  storage_account_id = azurerm_storage_account.vm.id
-}
+# resource "azurerm_storage_share" "vm-common" {
+#   name               = "ss-${local.resource_suffix}-share"
+#   quota              = 5
+#   storage_account_id = azurerm_storage_account.vm.id
+# }
 
 
 resource "azurerm_linux_virtual_machine" "host" {
