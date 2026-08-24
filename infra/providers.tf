@@ -23,7 +23,7 @@ terraform {
 
   backend "azurerm" {
     use_azuread_auth     = true
-    storage_account_name = "statrewsprdgn"
+    storage_account_name = "stasdeforgeprdgn"
     # container_name = "CHANGE_ME"
     key = "sde-forge.tfstate"
   }
@@ -32,6 +32,10 @@ terraform {
 
 provider "azurerm" {
   features {
+    key_vault {
+      purge_soft_delete_on_destroy    = true
+      recover_soft_deleted_key_vaults = false
+    }
   }
   storage_use_azuread = true
 }

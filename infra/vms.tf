@@ -1,8 +1,8 @@
 
 resource "azurerm_network_interface" "vm-main" {
-  name                = "nic-${local.resource_suffix}-vm"
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  name                = "${module.azure_names.network_interface.name}-vm"
+  location            = local.location
+  resource_group_name = local.resource_group
 
   ip_configuration {
     name                          = "testconfiguration1"
@@ -10,6 +10,7 @@ resource "azurerm_network_interface" "vm-main" {
     private_ip_address_allocation = "Dynamic"
   }
 
+  depends_on = [ azurerm_virtual_network.vnet ]
   tags = local.tags
 }
 
@@ -40,8 +41,8 @@ module "vm_storage_account_name" {
 
 resource "azurerm_storage_account" "vm" {
   name                = module.vm_storage_account_name.storage_account_name
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  location            = local.location
+  resource_group_name = local.resource_group
 
   account_tier             = "Standard"
   account_replication_type = "LRS"
@@ -64,8 +65,8 @@ resource "azurerm_storage_share" "vm-common" {
 resource "azurerm_linux_virtual_machine" "host" {
 
   name                  = "vm-${local.resource_suffix}"
-  location              = var.location
-  resource_group_name   = var.resource_group_name
+  location              = local.location
+  resource_group_name   = local.resource_group
   network_interface_ids = [azurerm_network_interface.vm-main.id]
   size                  = var.vm_sku
 

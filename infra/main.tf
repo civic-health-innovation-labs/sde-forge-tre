@@ -1,6 +1,20 @@
 
 
+module "names" {
+  source      = "../modules/names"
+  user_number = var.user_number
+  prefix      = local.resource_suffix
+}
+
 data "azurerm_client_config" "me" {}
+data "azuread_group" "my_group" {
+  display_name = module.names.group_name
+}
+
+module "azure_names" {
+  source = "Azure/naming/azurerm"
+  suffix = [local.resource_suffix, "${var.user_number}"]
+}
 
 
 locals {
@@ -13,15 +27,15 @@ locals {
 
   tenant_id = data.azurerm_client_config.me.tenant_id
 
-  resource_group = var.resource_group_name
+  resource_group = module.names.resource_group_name
   location       = var.location
 
   tags = merge(var.tags, { "Project" = "sde-forge" })
 }
 
 resource "azurerm_virtual_network" "vnet" {
-  name                = "vnet-${local.resource_suffix}"
-  resource_group_name = var.resource_group_name
+  name                = module.azure_names.virtual_network.name
+  resource_group_name = local.resource_group
   location            = var.location
 
   address_space = [local.vnet_cidr]
@@ -30,16 +44,30 @@ resource "azurerm_virtual_network" "vnet" {
 }
 
 resource "azurerm_key_vault" "kv" {
-  name                = "kv-${local.resource_suffix}"
-  resource_group_name = var.resource_group_name
+  name                = module.azure_names.key_vault.name_unique
+  resource_group_name = local.resource_group
   location            = var.location
   tenant_id           = local.tenant_id
   sku_name            = "standard"
+
+  rbac_authorization_enabled = true
 
   enabled_for_disk_encryption = true
   purge_protection_enabled    = true
 
   tags = local.tags
+}
+
+resource "azurerm_role_assignment" "des_kv_access" {
+  scope = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Crypto Service Encryption User"
+  principal_id = azurerm_disk_encryption_set.vm-des.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "group_kv_admin" {
+  scope = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Administrator"
+  principal_id = data.azuread_group.my_group.object_id
 }
 
 resource "azurerm_key_vault_key" "vm-encryption" {
@@ -49,7 +77,7 @@ resource "azurerm_key_vault_key" "vm-encryption" {
   key_size     = 2048
 
   depends_on = [
-    azurerm_key_vault_access_policy.current-user
+    azurerm_role_assignment.group_kv_admin
   ]
 
   key_opts = [
@@ -64,8 +92,8 @@ resource "azurerm_key_vault_key" "vm-encryption" {
 
 resource "azurerm_disk_encryption_set" "vm-des" {
   name                = "des-${local.resource_suffix}-vms"
-  resource_group_name = var.resource_group_name
-  location            = var.location
+  resource_group_name = local.resource_group
+  location            = local.location
   key_vault_key_id    = azurerm_key_vault_key.vm-encryption.id
 
   identity {
@@ -75,59 +103,3 @@ resource "azurerm_disk_encryption_set" "vm-des" {
   tags = local.tags
 }
 
-resource "azurerm_key_vault_access_policy" "des-vms" {
-  key_vault_id = azurerm_key_vault.kv.id
-
-  tenant_id = azurerm_disk_encryption_set.vm-des.identity[0].tenant_id
-  object_id = azurerm_disk_encryption_set.vm-des.identity[0].principal_id
-
-  key_permissions = [
-    "Create",
-    "Delete",
-    "Get",
-    "Purge",
-    "Recover",
-    "Update",
-    "List",
-    "Decrypt",
-    "Sign",
-    "Get",
-    "WrapKey",
-    "UnwrapKey"
-  ]
-}
-
-resource "azurerm_key_vault_access_policy" "current-user" {
-  key_vault_id = azurerm_key_vault.kv.id
-
-  tenant_id = local.tenant_id
-  object_id = data.azurerm_client_config.me.object_id
-
-  key_permissions = [
-    "Create",
-    "Delete",
-    "Get",
-    "Purge",
-    "Recover",
-    "Update",
-    "List",
-    "Decrypt",
-    "Sign",
-    "GetRotationPolicy",
-  ]
-
-  secret_permissions = [
-    "Delete",
-    "Get",
-    "Set",
-    "List",
-    "Purge",
-    "Restore"
-  ]
-}
-
-resource "azurerm_role_assignment" "vm-des" {
-  scope                = azurerm_key_vault.kv.id
-  role_definition_name = "Key Vault Crypto Service Encryption User"
-  principal_id         = azurerm_disk_encryption_set.vm-des.identity[0].principal_id
-}

@@ -2,7 +2,7 @@ resource "azurerm_subnet" "vms" {
   name                 = "sn-${local.resource_suffix}-vms"
   virtual_network_name = azurerm_virtual_network.vnet.name
 
-  resource_group_name = var.resource_group_name
+  resource_group_name = local.resource_group
 
   address_prefixes = [local.vm_cidr]
 
@@ -10,8 +10,8 @@ resource "azurerm_subnet" "vms" {
 }
 
 resource "azurerm_network_security_group" "vms" {
-  name                = "nsg-${local.resource_suffix}-vms"
-  resource_group_name = var.resource_group_name
+  name                = "${module.azure_names.network_security_group.name}-vms"
+  resource_group_name = local.resource_group
   location            = var.location
 
   tags = local.tags

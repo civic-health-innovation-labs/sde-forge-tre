@@ -1,15 +1,15 @@
 variable "location" {
-  type     = string
-  default  = "ukwest"
+  type    = string
+  default = "ukwest"
 }
 
-variable "resource_group_name" {
-  type     = string
+variable "user_number" {
+  type = number
 }
 
 variable "vm_sku" {
-  type     = string
-  default  = "Standard_B2als_v2"
+  type    = string
+  default = "Standard_B2als_v2"
 }
 
 variable "tags" {
