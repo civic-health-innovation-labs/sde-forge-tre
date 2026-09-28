@@ -18,7 +18,7 @@ cd infra
 terraform init
 ```
 
-This will ask for the container for state storage.
+This will ask for the container for state storage, which will look like `blob-sde-forge-user-<n>`, where n is your user number
 
 ### Managing the environment
 
