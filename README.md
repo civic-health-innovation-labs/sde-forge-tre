@@ -11,14 +11,13 @@ A very basic and imcomplete Trusted Research Environment for the SDE Forge Works
 
 ### Setup
 
-Using `infra/terraform.tfvars.example` as a template, create an `infra/terraform.tfvars`
-
-```bash
-cd infra
-terraform init
-```
-
-This will ask for the container for state storage, which will look like `blob-sde-forge-user-<n>`, where n is your user number
+1. `az login`
+1. Using `infra/terraform.tfvars.example` as a template, create an `infra/terraform.tfvars`
+2. ```bash
+   cd infra
+   terraform init
+   ```
+3. When prompted to the container for state storage, enter something like `blob-sde-forge-user-<n>`, where n is your user number
 
 ### Managing the environment
 
