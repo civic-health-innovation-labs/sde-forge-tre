@@ -21,3 +21,31 @@ resource "azurerm_subnet_network_security_group_association" "vms" {
   network_security_group_id = azurerm_network_security_group.vms.id
   subnet_id                 = azurerm_subnet.vms.id
 }
+
+resource "azurerm_network_security_rule" "deny_internet_outbound" {
+  name = "DenyInternetOutbound"
+  priority = 200
+  network_security_group_name = azurerm_network_security_group.vms.name
+  resource_group_name = azurerm_network_security_group.vms.resource_group_name
+  access = "Deny"
+  protocol = "*"
+  destination_address_prefix = "Internet"
+  destination_port_range = "*"
+  source_address_prefix = "*"
+  source_port_range = "*"
+  direction = "Outbound"
+}
+
+resource "azurerm_network_security_rule" "deny_internet_inbound" {
+  name = "DenyInternetInbound"
+  priority = 100
+  network_security_group_name = azurerm_network_security_group.vms.name
+  resource_group_name = azurerm_network_security_group.vms.resource_group_name
+  access = "Deny"
+  protocol = "*"
+  destination_address_prefix = "*"
+  destination_port_range = "*"
+  source_address_prefix = "Internet"
+  source_port_range = "*"
+  direction = "Inbound"
+}
