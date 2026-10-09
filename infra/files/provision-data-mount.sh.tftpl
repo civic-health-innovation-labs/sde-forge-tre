@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+STORAGE_ACCOUNT="${storage_account}"
+CONTAINER_NAME="${container_name}"
+
+# Install blobfuse2 and fuse3 using your distribution's supported
+# BlobFuse2 installation instructions before running this script.
+command -v blobfuse2 >/dev/null || {
+  echo "blobfuse2 is not installed" >&2
+  exit 1
+}
+
+install -d -m 0755 /mnt/blob-sde-forge-share
+install -d -m 0755 /etc/blobfuse2
+
+# blobfuse2 doesn't create this itself
+touch /var/log/blobfuse2.log
+
+cat >/etc/blobfuse2/forge.yaml <<YAML
+components:
+  - libfuse
+  - stream
+  - attr_cache
+  - azstorage
+
+libfuse:
+  attribute-expiration-sec: 0
+  entry-expiration-sec: 0
+  negative-entry-expiration-sec: 0
+
+attr_cache:
+  timeout-sec: 0
+
+azstorage:
+  type: block
+  account-name: $${STORAGE_ACCOUNT}
+  container:  $${CONTAINER_NAME}
+  endpoint: https://$${STORAGE_ACCOUNT}.blob.core.windows.net
+  mode: msi
+YAML
+
+chmod 0600 /etc/blobfuse2/forge.yaml
+
+# Keep the entry idempotent if the extension is rerun.
+grep -qF '/mnt/blob-sde-forge-share fuse3' /etc/fstab || \
+  echo 'blobfuse2 /mnt/blob-sde-forge-share fuse3 defaults,_netdev,--config-file=/etc/blobfuse2/forge.yaml,--streaming 0 0' >> /etc/fstab
+
+mountpoint -q /mnt/blob-sde-forge-share || mount /mnt/blob-sde-forge-share
