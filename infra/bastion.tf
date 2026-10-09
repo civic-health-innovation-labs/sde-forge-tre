@@ -160,14 +160,31 @@ resource "azurerm_network_security_rule" "bastion-http-out" {
   protocol                   = "*"
 }
 
+resource "azurerm_public_ip" "bastion" {
+  name                = "pip-${local.resource_suffix}-bastion"
+  resource_group_name = local.resource_group
+  location            = var.location
+
+  sku               = "Standard"
+  allocation_method = "Static"
+
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
+}
+
 resource "azurerm_bastion_host" "bastion" {
-  name                = "bstn-${local.resource_suffix}"
+  name                = module.azure_names.bastion_host.name #  "bstn-${local.resource_suffix}"
   resource_group_name = local.resource_group
   location            = local.location
 
-  sku = "Developer"
-
-  virtual_network_id = azurerm_virtual_network.vnet.id
+  sku = "Basic"
+  ip_configuration {
+    name                 = "bastion-ip-config"
+    public_ip_address_id = azurerm_public_ip.bastion.id
+    subnet_id            = azurerm_subnet.bastion.id
+  }
+  # virtual_network_id = azurerm_virtual_network.vnet.id
 
   tags = local.tags
 }
