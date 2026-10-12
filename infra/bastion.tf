@@ -168,6 +168,8 @@ resource "azurerm_public_ip" "bastion" {
   sku               = "Standard"
   allocation_method = "Static"
 
+  tags = local.tags
+
   # lifecycle {
   #   prevent_destroy = true
   # }

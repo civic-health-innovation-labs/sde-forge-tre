@@ -56,9 +56,9 @@ resource "azurerm_key_vault" "kv" {
 }
 
 resource "azurerm_role_assignment" "des_kv_access" {
-  scope = azurerm_key_vault.kv.id
+  scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Crypto Service Encryption User"
-  principal_id = azurerm_disk_encryption_set.vm-des.identity[0].principal_id
+  principal_id         = azurerm_disk_encryption_set.vm-des.identity[0].principal_id
 }
 
 resource "azurerm_key_vault_key" "vm-encryption" {
@@ -90,3 +90,7 @@ resource "azurerm_disk_encryption_set" "vm-des" {
   tags = local.tags
 }
 
+output "password_hash" {
+  value     = azurerm_linux_virtual_machine.host.custom_data
+  sensitive = true
+}
