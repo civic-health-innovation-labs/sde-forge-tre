@@ -11,13 +11,33 @@ command -v blobfuse2 >/dev/null || {
   exit 1
 }
 
-install -d -m 0755 /mnt/blob-sde-forge-share
+echo "wait for cloud-init to finish"
+# wait for cloud init to complete 
+# it can have exit code of 0 or 2 to indicate success  
+# https://docs.cloud-init.io/en/latest/explanation/failure_states.html#cloud-init-error-codes
+if cloud-init status --wait; then
+  :
+else
+  rc=$?
+  if (( rc == 2 )); then
+    echo "cloud-init completed with recoverable errors"
+  else
+    exit "$rc"
+  fi
+fi
+
+echo "create directories"
+install -d -m 0755 /home/analyst/data
 install -d -m 0755 /etc/blobfuse2
 
+echo "create blobfuse2 log files"
 # blobfuse2 doesn't create this itself
 touch /var/log/blobfuse2.log
 
+echo "create blobfuse2 config - forge.yaml"
 cat >/etc/blobfuse2/forge.yaml <<YAML
+allow-other: true
+
 components:
   - libfuse
   - stream
@@ -25,6 +45,7 @@ components:
   - azstorage
 
 libfuse:
+  direct-io: true
   attribute-expiration-sec: 0
   entry-expiration-sec: 0
   negative-entry-expiration-sec: 0
@@ -42,8 +63,10 @@ YAML
 
 chmod 0600 /etc/blobfuse2/forge.yaml
 
+echo "Create fstab entry"
 # Keep the entry idempotent if the extension is rerun.
 grep -qF '/mnt/blob-sde-forge-share fuse3' /etc/fstab || \
-  echo 'blobfuse2 /mnt/blob-sde-forge-share fuse3 defaults,_netdev,--config-file=/etc/blobfuse2/forge.yaml,--streaming 0 0' >> /etc/fstab
+  echo 'blobfuse2 /home/analyst/data fuse3 defaults,_netdev,--config-file=/etc/blobfuse2/forge.yaml,--streaming 0 0' >> /etc/fstab
 
-mountpoint -q /mnt/blob-sde-forge-share || mount /mnt/blob-sde-forge-share
+echo "Mount the data share"
+mountpoint -q /home/analyst/data/ || mount /home/analyst/data/
