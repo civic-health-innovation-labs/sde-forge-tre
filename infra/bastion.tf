@@ -178,7 +178,13 @@ resource "azurerm_bastion_host" "bastion" {
   resource_group_name = local.resource_group
   location            = local.location
 
-  sku = "Basic"
+  sku = "Standard"
+
+  copy_paste_enabled     = false
+  ip_connect_enabled     = false
+  shareable_link_enabled = false
+  tunneling_enabled      = true
+
   ip_configuration {
     name                 = "bastion-ip-config"
     public_ip_address_id = azurerm_public_ip.bastion.id
