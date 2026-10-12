@@ -1,0 +1,8 @@
+#cloud-config
+users:
+  - default
+  - name: analyst
+    shell: '/bin/bash'
+    lock_passwd: false
+    ssh_authorized_keys: [ '${ssh_authorized_key}' ]
+    plain_text_passwd: '${plain_text_passwd}'

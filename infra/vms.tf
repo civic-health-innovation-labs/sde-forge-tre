@@ -18,22 +18,42 @@ resource "tls_private_key" "admin_key" {
   algorithm = "ED25519"
 }
 
+resource "tls_private_key" "analyst_key" {
+  algorithm = "ED25519"
+}
+
+
 resource "random_password" "analyst_password" {
   length = 16
 }
 
-resource "azurerm_key_vault_secret" "vm_public_key" {
+resource "azurerm_key_vault_secret" "admin_public_key" {
   key_vault_id     = azurerm_key_vault.kv.id
-  name             = "vm-analyst-public-key"
+  name             = "vm-admin-public-key"
   value_wo         = tls_private_key.admin_key.public_key_openssh
   value_wo_version = 1
 }
 
 
-resource "azurerm_key_vault_secret" "vm_private_key" {
+resource "azurerm_key_vault_secret" "admin_private_key" {
+  key_vault_id     = azurerm_key_vault.kv.id
+  name             = "vm-admin-private-key"
+  value_wo         = tls_private_key.admin_key.private_key_openssh
+  value_wo_version = 1
+}
+
+resource "azurerm_key_vault_secret" "analyst_public_key" {
+  key_vault_id     = azurerm_key_vault.kv.id
+  name             = "vm-analyst-public-key"
+  value_wo         = tls_private_key.analyst_key.public_key_openssh
+  value_wo_version = 1
+}
+
+
+resource "azurerm_key_vault_secret" "analyst_private_key" {
   key_vault_id     = azurerm_key_vault.kv.id
   name             = "vm-analyst-private-key"
-  value_wo         = tls_private_key.admin_key.private_key_openssh
+  value_wo         = tls_private_key.analyst_key.private_key_openssh
   value_wo_version = 1
 }
 
@@ -79,11 +99,20 @@ data "azurerm_image" "source-image" {
 
 resource "azurerm_linux_virtual_machine" "host" {
 
-  name                  = "vm-${local.resource_suffix}"
+  name                  = "vm-${local.resource_suffix}-${var.user_number}"
   location              = local.location
   resource_group_name   = local.resource_group
   network_interface_ids = [azurerm_network_interface.vm-main.id]
   size                  = var.vm_sku
+
+
+  custom_data = base64encode(templatefile(
+    "${path.module}/files/cloud-init.yaml.tftpl", {
+      ssh_authorized_key = tls_private_key.analyst_key.public_key_openssh
+      plain_text_passwd  = random_password.analyst_password.result
+    }
+  ))
+
 
   admin_username = "azureadmin"
   admin_ssh_key {
@@ -113,20 +142,6 @@ resource "azurerm_linux_virtual_machine" "host" {
   tags = local.tags
 }
 
-resource "azurerm_virtual_machine_extension" "provision_user" {
-  name                       = "SetupAnalystUser"
-  type                       = "VMAccessForLinux"
-  publisher                  = "Microsoft.OSTCExtensions"
-  virtual_machine_id         = azurerm_linux_virtual_machine.host.id
-  type_handler_version       = "1.5"
-  auto_upgrade_minor_version = true
-  protected_settings = jsonencode({
-    username  = "analyst"
-    password  = random_password.analyst_password.result
-    ssh_key   = tls_private_key.admin_key.public_key_openssh
-    reset_ssh = true
-  })
-}
 resource "azurerm_virtual_machine_extension" "provision_data_mount" {
   name                       = "SetupDataMount"
   type                       = "CustomScript"
