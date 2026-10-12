@@ -49,6 +49,7 @@ build {
       "sudo dpkg -i packages-microsoft-prod.deb",
       "sudo rm packages-microsoft-prod.deb",
       "sudo DEBIAN_FRONTEND=noninteractive apt update",
+      "yes | sudo unminimize",
       "sudo DEBIAN_FRONTEND=noninteractive apt install -y blobfuse2 xfce4 xfce4-session xrdp xterm",
       "curl -fsSL https://download.opensuse.org/repositories/isv:/BrowserWorks/xUbuntu_26.04/Release.key | gpg --dearmor | sudo tee /usr/share/keyrings/waterfox.gpg > /dev/null",
       "echo 'deb [signed-by=/usr/share/keyrings/waterfox.gpg] https://download.opensuse.org/repositories/isv:/BrowserWorks/xUbuntu_26.04/ /' | sudo tee /etc/apt/sources.list.d/waterfox.list",
