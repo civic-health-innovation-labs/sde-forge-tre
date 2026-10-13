@@ -54,7 +54,8 @@ build {
       "curl -fsSL https://download.opensuse.org/repositories/isv:/BrowserWorks/xUbuntu_26.04/Release.key | gpg --dearmor | sudo tee /usr/share/keyrings/waterfox.gpg > /dev/null",
       "echo 'deb [signed-by=/usr/share/keyrings/waterfox.gpg] https://download.opensuse.org/repositories/isv:/BrowserWorks/xUbuntu_26.04/ /' | sudo tee /etc/apt/sources.list.d/waterfox.list",
       "sudo DEBIAN_FRONTEND=noninteractive apt update && sudo DEBIAN_FRONTEND=noninteractive apt install waterfox",
-      "sudo systemctl enable xrdp"
+      "sudo systemctl enable xrdp",
+      "/usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync"
     ]
   }
 }
