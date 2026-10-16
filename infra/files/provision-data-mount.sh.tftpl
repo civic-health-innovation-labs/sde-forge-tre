@@ -3,6 +3,7 @@ set -euo pipefail
 
 STORAGE_ACCOUNT="${storage_account}"
 CONTAINER_NAME="${container_name}"
+MOUNT_POINT="/home/analyst/data"
 
 # Install blobfuse2 and fuse3 using your distribution's supported
 # BlobFuse2 installation instructions before running this script.
@@ -27,7 +28,7 @@ else
 fi
 
 echo "create directories"
-install -d -m 0755 /home/analyst/data
+install -d -m 0755 "$MOUNT_POINT"
 install -d -m 0755 /etc/blobfuse2
 
 echo "create blobfuse2 log files"
@@ -69,4 +70,22 @@ grep -qF '/mnt/blob-sde-forge-share fuse3' /etc/fstab || \
   echo 'blobfuse2 /home/analyst/data fuse3 defaults,_netdev,--config-file=/etc/blobfuse2/forge.yaml,--streaming 0 0' >> /etc/fstab
 
 echo "Mount the data share"
-mountpoint -q /home/analyst/data/ || mount /home/analyst/data/
+
+for i in $(seq 1 5); do
+  # check if appears mounted, and we can see files
+  if mountpoint -q "$MOUNT_POINT" && ls "$MOUNT_POINT" > /dev/null 2>&1; then
+    echo "Mounted and accessible!"
+    SUCCESS=true
+    break
+  fi
+  # 2. If not mounted, try to mount it
+  echo "Attempt $i: Trying to mount '$MOUNT_POINT'..."
+  if mount "$MOUNT_POINT"; then
+    echo "Mount successful!"
+    SUCCESS=true
+    break
+  fi
+
+  echo "Mount failed. Waiting 30s..."
+  sleep 30
+done;
