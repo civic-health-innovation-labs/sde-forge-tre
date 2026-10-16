@@ -91,10 +91,11 @@ resource "azurerm_storage_container" "vm-common" {
 }
 
 
-data "azurerm_image" "source-image" {
-  name_regex          = "^sde-forge-${var.image_version}"
+data "azurerm_shared_image_version" "source-image" {
+  name                = "latest"
+  image_name          = var.image_version
+  gallery_name        = "sig_sdeforge_2026"
   resource_group_name = "rg-sde-forge"
-  sort_descending     = true
 }
 
 resource "azurerm_linux_virtual_machine" "host" {
@@ -131,7 +132,7 @@ resource "azurerm_linux_virtual_machine" "host" {
     type = "SystemAssigned"
   }
 
-  source_image_id = data.azurerm_image.source-image.id
+  source_image_id = data.azurerm_shared_image_version.source-image.id
 
   os_disk {
     caching                = "ReadWrite"
