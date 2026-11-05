@@ -8,6 +8,10 @@ module "names" {
 
 data "azurerm_client_config" "me" {}
 
+data "azuread_group" "user_group" {
+  display_name = module.names.group_name
+}
+
 module "azure_names" {
   source = "Azure/naming/azurerm"
   suffix = [local.resource_suffix, "${var.user_number}"]

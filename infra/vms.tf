@@ -166,3 +166,9 @@ resource "azurerm_role_assignment" "vm-access-to-storage" {
   principal_id         = azurerm_linux_virtual_machine.host.identity[0].principal_id
   scope                = azurerm_storage_container.vm-common.id
 }
+
+resource "azurerm_role_assignment" "user-access-to-storage" {
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = data.azuread_group.user_group.object_id
+  scope                = azurerm_storage_container.vm-common.id
+}
