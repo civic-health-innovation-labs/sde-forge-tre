@@ -78,8 +78,10 @@ resource "azurerm_storage_account" "vm" {
   account_replication_type = "LRS"
 
   network_rules {
-    default_action = "Allow"
-    # virtual_network_subnet_ids = [azurerm_subnet.vms.id]
+    default_action             = "Allow"
+    bypass                     = []
+    ip_rules                   = []
+    virtual_network_subnet_ids = []
   }
 
   tags = local.tags
@@ -122,11 +124,8 @@ resource "azurerm_linux_virtual_machine" "host" {
   }
 
   encryption_at_host_enabled = true
-  # vtpm_enabled               = true
 
   provision_vm_agent = true
-
-  #secure_boot_enabled = true
 
   identity {
     type = "SystemAssigned"
