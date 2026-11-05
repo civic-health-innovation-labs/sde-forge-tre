@@ -23,7 +23,7 @@ terraform {
 
   backend "azurerm" {
     use_azuread_auth     = true
-    storage_account_name = "stasdeforgeprdgn"
+    storage_account_name = "stasdeforgeprdfrg"
     # container_name = "CHANGE_ME"
     key = "sde-forge.tfstate"
   }
