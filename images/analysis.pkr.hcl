@@ -70,7 +70,11 @@ build {
       "DEBIAN_FRONTEND" = "noninteractive"
     }
     inline = [
-      "apt update",
+      "apt update -qq",
+      "apt install -y --no-install-recommends software-properties-common dirmngr",
+      "wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc",
+      "add-apt-repository \"deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/\"",
+      "apt install -y --no-install-recommends r-base",
       "wget -q -O /tmp/rstudio.deb ${var.rstudio_deb_url}",
       "apt install -y /tmp/rstudio.deb",
       "apt install -y libreoffice",
